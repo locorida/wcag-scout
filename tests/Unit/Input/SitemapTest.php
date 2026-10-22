@@ -28,6 +28,28 @@ final class SitemapTest extends TestCase
         self::assertSame(['https://example.com/', 'https://example.com/a?x=1&y=2'], $sitemap->locations);
     }
 
+    /** Image and video extensions have their own <loc> elements, which point to media files. */
+    public function testIgnoresLocationsOfSitemapExtensions(): void
+    {
+        $sitemap = Sitemap::parse(<<<'XML'
+            <?xml version="1.0" encoding="UTF-8"?>
+            <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+                    xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+                    xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+              <url>
+                <loc>https://example.com/</loc>
+                <image:image><image:loc>https://example.com/uploads/living-room.jpg</image:loc></image:image>
+              </url>
+              <url>
+                <loc>https://example.com/area</loc>
+                <video:video><video:content_loc>https://example.com/tour.mp4</video:content_loc><video:player_loc>https://example.com/player</video:player_loc></video:video>
+              </url>
+            </urlset>
+            XML);
+
+        self::assertSame(['https://example.com/', 'https://example.com/area'], $sitemap->locations);
+    }
+
     public function testParsesIndex(): void
     {
         $sitemap = Sitemap::parse(<<<'XML'

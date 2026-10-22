@@ -135,13 +135,36 @@ final class ChromeBrowser implements PageLoader, PdfPrinter
                 '--disable-component-update',
                 '--mute-audio',
                 '--hide-scrollbars',
+                // Crash reports are of no use here, and the crash handler refuses to start
+                // without a writable database directory.
+                '--disable-crash-reporter',
+                '--disable-breakpad',
             ],
+            'envVariables' => self::writableHome(),
         ]);
 
         $browserUserAgent = $this->browserInfo()['userAgent'] ?? '';
         $this->userAgent = $this->identity->forBrowser(\is_string($browserUserAgent) ? $browserUserAgent : '');
 
         return $this->browser;
+    }
+
+    /**
+     * Chromium writes configuration and caches below $HOME. A container started with
+     * "--user $(id -u)" often has no home (HOME=/), and Chromium then fails to start. In that
+     * case, and only then, it gets the temp directory instead.
+     *
+     * @return array<string, string>|null
+     */
+    private static function writableHome(): ?array
+    {
+        $home = getenv('HOME');
+        if (\is_string($home) && $home !== '' && is_dir($home) && is_writable($home)) {
+            return null;
+        }
+        $temp = sys_get_temp_dir();
+
+        return ['HOME' => $temp, 'XDG_CONFIG_HOME' => $temp . '/.config', 'XDG_CACHE_HOME' => $temp . '/.cache'];
     }
 
     /** @return array<mixed> */
