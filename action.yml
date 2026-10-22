@@ -66,4 +66,6 @@ outputs:
 
 runs:
   using: docker
-  image: action.Dockerfile
+  # Pre-built image from the GitHub Container Registry (published by .github/workflows/release.yml),
+  # so a run starts in seconds instead of building for minutes. Its source is action.Dockerfile.
+  image: docker://ghcr.io/locorida/wcag-scout-action:0.1.0

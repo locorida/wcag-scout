@@ -74,19 +74,31 @@ extension plus the manual checklist for the pages that matter most.
 
 ## Quickstart
 
-### With Docker (recommended)
+### Without installing anything: in your own GitHub repository
+
+1. Open the template **[locorida/wcag-scout-template](https://github.com/locorida/wcag-scout-template)**
+   and click **Use this template** → *Create a new repository*. Choose **Private**.
+2. In your new repository, go to **Actions** → **Accessibility audit** → **Run workflow**.
+   Enter a sitemap or URLs.
+3. After the run, download the report from the run's **Artifacts**.
+
+The report only ends up in your own repository. The runs count against your own Actions
+minutes, and nothing is stored anywhere else.
+
+### With Docker
 
 ```bash
-docker build -t wcag-scout .
-docker run --rm -v "$PWD:/report" wcag-scout audit https://example.com/ --lang en
+docker run --rm -v "$PWD:/report" ghcr.io/locorida/wcag-scout:0.1.0 audit https://example.com/ --lang en
 ```
 
 PowerShell:
 
 ```powershell
-docker build -t wcag-scout .
-docker run --rm -v "${PWD}:/report" wcag-scout audit https://example.com/ --lang de
+docker run --rm -v "${PWD}:/report" ghcr.io/locorida/wcag-scout:0.1.0 audit https://example.com/ --lang de
 ```
+
+To build the image yourself instead: `docker build -t wcag-scout .`, then use `wcag-scout` as
+the image name. The examples below do that.
 
 The reports end up in `./wcag-scout-report/`. Open `report.html`.
 
@@ -230,7 +242,7 @@ citation yourself; this README will not stay up to date with it.
 ### GitHub Action
 
 ```yaml
-- uses: locorida/wcag-scout@main
+- uses: locorida/wcag-scout@v0.1.0
   with:
     sitemap: https://staging.example.com/sitemap.xml
     format: html,pdf,junit
@@ -245,7 +257,12 @@ citation yourself; this README will not stay up to date with it.
 ```
 
 All inputs are listed in [`action.yml`](action.yml). The action writes a findings summary to
-the job summary and sets the outputs `report-dir` and `exit-code`.
+the job summary and sets the outputs `report-dir` and `exit-code`. It uses the pre-built image
+`ghcr.io/locorida/wcag-scout-action`, so a run starts within seconds.
+
+> [!NOTE]
+> In a **public** repository, workflow artifacts, job summaries and logs, including the audited
+> URLs, are visible to everyone. Audit other people's websites from a private repository.
 
 ### Introducing it on a site with existing problems
 
