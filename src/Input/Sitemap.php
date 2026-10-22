@@ -48,6 +48,7 @@ final readonly class Sitemap
         }
 
         $root = null;
+        $rootNamespace = '';
         $locations = [];
         $previous = libxml_use_internal_errors(true);
         try {
@@ -55,8 +56,13 @@ final readonly class Sitemap
                 if ($reader->nodeType !== XMLReader::ELEMENT) {
                     continue;
                 }
-                $root ??= $reader->localName;
-                if ($reader->localName === 'loc') {
+                if ($root === null) {
+                    $root = $reader->localName;
+                    $rootNamespace = $reader->namespaceURI;
+                }
+                // Only <loc> of the sitemap itself: extensions such as <image:loc> or
+                // <video:content_loc> live in other namespaces and point to media, not pages.
+                if ($reader->localName === 'loc' && $reader->namespaceURI === $rootNamespace && $reader->depth === 2) {
                     $location = trim($reader->readString());
                     if ($location !== '') {
                         $locations[] = $location;
