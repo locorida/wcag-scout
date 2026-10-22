@@ -11,9 +11,9 @@ permissions:
 
 jobs:
   quality:
-    name: Code style, static analysis, licences, unit tests
+    name: Code style, static analysis, licences, tests
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
 
@@ -35,14 +35,79 @@ jobs:
       - name: Code style
         run: docker run --rm -v "$PWD:/app" -u "$(id -u):$(id -g)" wcag-scout:dev composer cs
 
-      - name: Static analysis
+      - name: Static analysis (PHPStan level max)
         run: docker run --rm -v "$PWD:/app" -u "$(id -u):$(id -g)" wcag-scout:dev composer analyse
 
-      - name: Licences
+      - name: Licences of runtime dependencies
         run: docker run --rm -v "$PWD:/app" -u "$(id -u):$(id -g)" wcag-scout:dev composer check:licenses
 
       - name: Unit tests
         run: docker run --rm -v "$PWD:/app" -u "$(id -u):$(id -g)" wcag-scout:dev composer test
 
-      - name: Integration tests (Chromium + axe-core against tests/fixtures)
+      # Chromium + axe-core against tests/fixtures, the CLI end to end, baseline and
+      # compare, and the HTML report auditing itself.
+      - name: Integration tests
         run: docker run --rm -v "$PWD:/app" -u "$(id -u):$(id -g)" wcag-scout:dev composer test:integration
+
+  docker:
+    name: Docker image and example audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build runtime image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: wcag-scout:latest
+          cache-from: type=gha,scope=runtime
+          cache-to: type=gha,mode=max,scope=runtime
+
+      - name: Build action image
+        run: docker build -f action.Dockerfile -t wcag-scout:action .
+
+      - name: Serve the fixture site
+        run: |
+          docker network create scout
+          docker run -d --name fixtures --network scout -v "$PWD/tests/fixtures:/fixtures:ro" \
+            php:8.5-cli-trixie php -S 0.0.0.0:8000 -t /fixtures/site /fixtures/router.php
+          for i in $(seq 1 20); do docker exec fixtures php -r 'exit(@file_get_contents("http://127.0.0.1:8000/robots.txt") === false ? 1 : 0);' && break; sleep 0.5; done
+
+      - name: Example audit with the runtime image (expects findings, exit code 1)
+        run: |
+          mkdir -p example-report && chmod 777 example-report
+          set +e
+          docker run --rm --network scout -v "$PWD/example-report:/report" wcag-scout:latest \
+            audit --sitemap http://fixtures:8000/sitemap_index.xml --delay 0 \
+            --format html,pdf,json,junit --lang en --output /report
+          code=$?
+          set -e
+          echo "exit code: $code"
+          test "$code" -eq 1
+          test -s example-report/report.html && test -s example-report/report.pdf && test -s example-report/junit.xml
+
+      - name: Action image, as GitHub would run it
+        run: |
+          mkdir -p workspace summary
+          set +e
+          docker run --rm --network scout -v "$PWD/workspace:/github/workspace" -v "$PWD/summary:/github/summary" -w /github/workspace \
+            -e INPUT_SITEMAP=http://fixtures:8000/sitemap_index.xml -e INPUT_DELAY=0 -e INPUT_FORMAT=html,junit \
+            -e INPUT_LANG=de -e INPUT_OUTPUT=report -e "INPUT_FAIL-ON=serious" \
+            -e GITHUB_STEP_SUMMARY=/github/summary/summary.md -e GITHUB_OUTPUT=/github/summary/output \
+            wcag-scout:action
+          code=$?
+          set -e
+          test "$code" -eq 1
+          grep -q "report-dir=report" summary/output
+          grep -q "Critical | 5" summary/summary.md
+          test -s workspace/report/report.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: example-report
+          path: example-report

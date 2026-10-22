@@ -1,0 +1,85 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Entry point of the GitHub Action (action.yml). Translates the action inputs, which GitHub
+ * passes as INPUT_<NAME> environment variables, into arguments for "wcag-scout audit",
+ * writes a findings summary to the job summary and the report directory to the step outputs.
+ */
+
+use Symfony\Component\Console\Input\ArgvInput;
+use WcagScout\Cli\Application;
+use WcagScout\Model\PageStatus;
+use WcagScout\Report\Json\JsonRenderer;
+use WcagScout\Report\Json\RunDeserializer;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$input = static function (string $name): string {
+    $value = getenv('INPUT_' . strtoupper($name));
+
+    return is_string($value) ? trim($value) : '';
+};
+
+$arguments = ['wcag-scout', 'audit'];
+$urls = preg_split('/\s+/', $input('urls'), flags: PREG_SPLIT_NO_EMPTY);
+foreach ($urls === false ? [] : $urls as $url) {
+    $arguments[] = $url;
+}
+
+$options = [
+    'sitemap' => 'sitemap', 'urls-file' => 'urls-file', 'output' => 'output', 'lang' => 'lang', 'level' => 'level',
+    'max-pages' => 'max-pages', 'delay' => 'delay', 'baseline' => 'baseline', 'fail-on' => 'fail-on',
+    'en301549' => 'en301549', 'contact-url' => 'contact-url',
+];
+foreach ($options as $inputName => $option) {
+    if ($input($inputName) !== '') {
+        array_push($arguments, '--' . $option, $input($inputName));
+    }
+}
+
+// JSON is always written: the job summary is built from it.
+$format = $input('format') !== '' ? $input('format') : 'html,json,junit';
+$formats = array_filter(array_map(trim(...), explode(',', $format)), static fn(string $f): bool => $f !== '');
+$arguments[] = '--format=' . implode(',', array_unique([...$formats, 'json']));
+
+if ($input('follow-links') === 'true') {
+    $arguments[] = '--follow-links';
+}
+
+$output = $input('output') !== '' ? $input('output') : 'wcag-scout-report';
+date_default_timezone_set('UTC');
+
+$application = new Application();
+$application->setAutoExit(false);
+$exitCode = $application->run(new ArgvInput($arguments));
+
+// Job summary and outputs. Failing to write them must not change the audit result.
+$summaryFile = getenv('GITHUB_STEP_SUMMARY');
+$reportFile = $output . '/' . JsonRenderer::FILE;
+if (is_string($summaryFile) && $summaryFile !== '' && is_file($reportFile)) {
+    try {
+        $run = new RunDeserializer()->fromFile($reportFile);
+        $lines = ['## wcag-scout accessibility audit', '', '| Severity | Findings |', '|---|---|'];
+        foreach ($run->countBySeverity() as $severity => $count) {
+            $lines[] = sprintf('| %s | %d |', ucfirst($severity), $count);
+        }
+        $lines[] = '';
+        $audited = count($run->pagesWithStatus(PageStatus::Audited));
+        $lines[] = sprintf('%d page(s) audited, %d not audited. Reports: `%s`', $audited, count($run->pages) - $audited, $output);
+        $lines[] = '';
+        $lines[] = '> Automated tests detect only part of all accessibility problems. This is not proof of conformance with WCAG, EN 301 549 or the BFSG and does not replace a manual audit.';
+        file_put_contents($summaryFile, implode("\n", $lines) . "\n", FILE_APPEND);
+    } catch (Throwable $e) {
+        fwrite(STDERR, 'Could not write the job summary: ' . $e->getMessage() . "\n");
+    }
+}
+
+$outputFile = getenv('GITHUB_OUTPUT');
+if (is_string($outputFile) && $outputFile !== '') {
+    file_put_contents($outputFile, sprintf("report-dir=%s\nexit-code=%d\n", $output, $exitCode), FILE_APPEND);
+}
+
+exit($exitCode);

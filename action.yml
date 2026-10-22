@@ -1,0 +1,69 @@
+name: wcag-scout accessibility audit
+description: Audit web pages with axe-core in headless Chromium and write WCAG 2.2 / EN 301 549 reports (HTML, PDF, JSON, JUnit).
+author: Matthias Max
+branding:
+  icon: eye
+  color: blue
+
+inputs:
+  urls:
+    description: Space-separated URLs to audit. Give exactly one of urls, sitemap or urls-file.
+    required: false
+  sitemap:
+    description: URL of a sitemap or sitemap index.
+    required: false
+  urls-file:
+    description: Path (in the workspace) of a text file with one URL per line.
+    required: false
+  output:
+    description: Directory for the reports, relative to the workspace.
+    required: false
+    default: wcag-scout-report
+  format:
+    description: Comma-separated report formats (html, pdf, json, junit). JSON is always written.
+    required: false
+    default: html,json,junit
+  lang:
+    description: Report language, en or de.
+    required: false
+    default: en
+  level:
+    description: Highest WCAG level to test (A, AA, AAA).
+    required: false
+    default: AA
+  en301549:
+    description: EN 301 549 version for clause references (3.2.1 or 4.1.1).
+    required: false
+    default: '3.2.1'
+  max-pages:
+    description: Maximum number of pages to load.
+    required: false
+    default: '50'
+  delay:
+    description: Pause between requests to the same site, in seconds.
+    required: false
+    default: '1'
+  follow-links:
+    description: Also audit same-site links found on the pages ("true" or "false").
+    required: false
+    default: 'false'
+  baseline:
+    description: Baseline file in the workspace; known findings do not fail the step.
+    required: false
+  fail-on:
+    description: Lowest severity that fails the step (critical, serious, moderate, minor, never).
+    required: false
+    default: minor
+  contact-url:
+    description: Contact URL sent in the user agent, so site operators can reach you.
+    required: false
+
+outputs:
+  report-dir:
+    description: Directory with the reports.
+  exit-code:
+    description: 0 no failing findings, 1 failing findings, 2 invalid input, 3 error.
+
+runs:
+  using: docker
+  image: action.Dockerfile

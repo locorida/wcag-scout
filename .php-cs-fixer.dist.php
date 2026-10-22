@@ -5,7 +5,7 @@ declare(strict_types=1);
 $finder = PhpCsFixer\Finder::create()
     ->in([__DIR__ . '/src', __DIR__ . '/tests'])
     ->exclude('fixtures')
-    ->append([__DIR__ . '/bin/wcag-scout', __DIR__ . '/bin/check-licenses']);
+    ->append([__DIR__ . '/bin/wcag-scout', __DIR__ . '/bin/check-licenses', __DIR__ . '/bin/github-action']);
 
 return (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)
