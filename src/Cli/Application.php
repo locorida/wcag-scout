@@ -16,6 +16,9 @@ final class Application extends ConsoleApplication
         parent::__construct(self::NAME, self::VERSION);
         $this->addCommands([
             new AuditCommand(),
+            new BaselineCommand(),
+            new CompareCommand(),
+            new RenderCommand(),
         ]);
     }
 }

@@ -84,7 +84,7 @@ final readonly class AuditConfig
             ),
             En301549Version::fromOption(self::string($input->getOption('en301549'))),
             $failOnValue === 'never' ? null : Severity::fromOption($failOnValue),
-            $input->hasOption('baseline') ? self::optionalString($input->getOption('baseline')) : null,
+            self::optionalString($input->getOption('baseline')),
             Url::parse(self::string($input->getOption('contact-url')))->__toString(),
             self::int($input->getOption('timeout'), '--timeout', min: 5),
             self::int($input->getOption('screenshots'), '--screenshots', min: 0),

@@ -80,6 +80,19 @@ return [
 
     'junit.criterion' => 'WCAG %number% (%level%)',
 
+    'compare.title' => 'Comparison of two audits',
+    'compare.runs' => 'Earlier run: %before% · later run: %after%',
+    'compare.added' => 'New',
+    'compare.fixed' => 'Fixed',
+    'compare.unchanged' => 'Unchanged',
+    'compare.notRechecked' => 'Not checked again',
+    'compare.added.caption' => 'Findings that only occur in the later run',
+    'compare.fixed.caption' => 'Findings of the earlier run that no longer occur',
+    'compare.unchanged.caption' => 'Findings that occur in both runs',
+    'compare.notRechecked.caption' => 'Findings of the earlier run on pages the later run did not audit',
+    'compare.not_rechecked_note' => 'A finding only counts as fixed if its page was audited again. Findings on pages that the later run did not reach (page limit, errors) are listed as "not checked again".',
+    'compare.none' => 'None.',
+
     'wcag.1.1.1' => 'Non-text Content',
     'wcag.1.2.1' => 'Audio-only and Video-only (Prerecorded)',
     'wcag.1.2.2' => 'Captions (Prerecorded)',

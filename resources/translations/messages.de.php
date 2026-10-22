@@ -80,6 +80,19 @@ return [
 
     'junit.criterion' => 'WCAG %number% (%level%)',
 
+    'compare.title' => 'Vergleich zweier Prüfungen',
+    'compare.runs' => 'Früherer Lauf: %before% · späterer Lauf: %after%',
+    'compare.added' => 'Neu',
+    'compare.fixed' => 'Behoben',
+    'compare.unchanged' => 'Unverändert',
+    'compare.notRechecked' => 'Nicht erneut geprüft',
+    'compare.added.caption' => 'Befunde, die nur im späteren Lauf vorkommen',
+    'compare.fixed.caption' => 'Befunde des früheren Laufs, die nicht mehr vorkommen',
+    'compare.unchanged.caption' => 'Befunde, die in beiden Läufen vorkommen',
+    'compare.notRechecked.caption' => 'Befunde des früheren Laufs auf Seiten, die der spätere Lauf nicht geprüft hat',
+    'compare.not_rechecked_note' => 'Ein Befund gilt nur als behoben, wenn seine Seite erneut geprüft wurde. Befunde auf Seiten, die der spätere Lauf nicht erreicht hat (Seitenlimit, Fehler), stehen unter „Nicht erneut geprüft“.',
+    'compare.none' => 'Keine.',
+
     'wcag.1.1.1' => 'Nicht-Text-Inhalt',
     'wcag.1.2.1' => 'Reine Audio- und Videoinhalte (aufgezeichnet)',
     'wcag.1.2.2' => 'Untertitel (aufgezeichnet)',

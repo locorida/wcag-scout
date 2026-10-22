@@ -84,6 +84,32 @@ final class CliAuditTest extends TestCase
         }
     }
 
+    public function testBaselineTurnsKnownFindingsIntoAPassingRun(): void
+    {
+        $cli = \dirname(__DIR__, 2) . '/bin/wcag-scout';
+        $baseline = self::$output . '/baseline.json';
+
+        $create = new Process([PHP_BINARY, $cli, 'baseline', self::$output . '/report.json', '--output', $baseline]);
+        self::assertSame(ExitCode::OK, $create->run(), $create->getErrorOutput());
+
+        $rerun = new Process([
+            PHP_BINARY, $cli, 'audit',
+            '--sitemap', self::$site->url('/sitemap_index.xml'),
+            '--baseline', $baseline,
+            '--format', 'json,junit',
+            '--delay', '0',
+            '--screenshots', '0',
+            '--output', self::$output . '/rerun',
+        ], timeout: 300);
+
+        self::assertSame(ExitCode::OK, $rerun->run(), $rerun->getErrorOutput() . $rerun->getOutput());
+        self::assertStringContainsString('failures="0"', (string) file_get_contents(self::$output . '/rerun/junit.xml'));
+
+        $compare = new Process([PHP_BINARY, $cli, 'compare', self::$output . '/report.json', self::$output . '/rerun/report.json', '--output', self::$output . '/cmp']);
+        self::assertSame(ExitCode::OK, $compare->run(), 'same site, same findings: nothing new');
+        self::assertStringContainsString('"unchanged": 9', (string) file_get_contents(self::$output . '/cmp/comparison.json'));
+    }
+
     /**
      * The report must itself be accessible: axe-core (including best practices, up to AAA)
      * finds nothing in it.

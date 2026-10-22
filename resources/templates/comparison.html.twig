@@ -1,0 +1,68 @@
+{#- Comparison of two runs. Same accessibility rules as the main report. -#}
+{%- set date_format = lang == 'de' ? 'd.m.Y, H:i T' : 'Y-m-d H:i T' -%}
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ 'compare.title'|t }} – {{ site }}</title>
+  <style>{% include 'report.css' %}</style>
+</head>
+<body>
+<a class="skip-link" href="#summary">{{ 'report.skip_link'|t }}</a>
+
+<header class="report-header">
+  <p class="eyebrow">wcag-scout</p>
+  <h1>{{ 'compare.title'|t }}</h1>
+  <p class="subtitle">{{ site }}</p>
+  <p class="meta">{{ 'compare.runs'|t({'%before%': c.before.startedAt|date(date_format), '%after%': c.after.startedAt|date(date_format)}) }}</p>
+</header>
+
+<main>
+  <section id="summary" aria-labelledby="summary-title">
+    <h2 id="summary-title">{{ 'summary.title'|t }}</h2>
+    <ul class="figures">
+      {%- for category, findings in categories %}
+      <li><span class="figure-value">{{ findings|length }}</span> <span class="figure-label">{{ ('compare.' ~ category)|t }}</span></li>
+      {%- endfor %}
+    </ul>
+    <p>{{ 'compare.not_rechecked_note'|t }}</p>
+  </section>
+
+  {%- for category, findings in categories %}
+  <section id="{{ category }}" aria-labelledby="{{ category }}-title">
+    <h2 id="{{ category }}-title">{{ ('compare.' ~ category)|t }} ({{ findings|length }})</h2>
+    {%- if findings is empty %}
+    <p>{{ 'compare.none'|t }}</p>
+    {%- else %}
+    <div class="table-scroll" tabindex="0" role="region" aria-labelledby="{{ category }}-caption">
+    <table>
+      <caption id="{{ category }}-caption">{{ ('compare.' ~ category ~ '.caption')|t }}</caption>
+      <thead><tr>
+        <th scope="col">{{ 'summary.issue'|t }}</th>
+        <th scope="col">{{ 'severity.label'|t }}</th>
+        <th scope="col">{{ 'pages.page'|t }}</th>
+        <th scope="col">{{ 'finding.selector'|t }}</th>
+      </tr></thead>
+      <tbody>
+      {%- for finding in findings %}
+        <tr>
+          <th scope="row">{{ finding|rule_title }} <code>{{ finding.ruleId }}</code></th>
+          <td><span class="badge badge-{{ finding.severity.value }}">{{ ('severity.' ~ finding.severity.value)|t }}</span></td>
+          <td class="url">{{ finding.pageUrl }}</td>
+          <td><code>{{ finding.selector }}</code></td>
+        </tr>
+      {%- endfor %}
+      </tbody>
+    </table>
+    </div>
+    {%- endif %}
+  </section>
+  {%- endfor %}
+</main>
+
+<footer class="report-footer">
+  <p>{{ 'footer.tool'|t }}</p>
+</footer>
+</body>
+</html>

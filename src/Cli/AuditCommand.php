@@ -18,6 +18,7 @@ use Symfony\Component\HttpClient\HttpClient;
 use WcagScout\Audit\AuditRunner;
 use WcagScout\Audit\BrowserPageAuditor;
 use WcagScout\Audit\ScreenshotWriter;
+use WcagScout\Baseline\Baseline;
 use WcagScout\Browser\BrowserOptions;
 use WcagScout\Browser\ChromeBrowser;
 use WcagScout\Crawl\Crawler;
@@ -53,6 +54,7 @@ final class AuditCommand extends Command
             ->addOption('contact-url', null, InputOption::VALUE_REQUIRED, 'Contact URL sent in the user agent', UserAgent::DEFAULT_CONTACT)
             ->addOption('timeout', 't', InputOption::VALUE_REQUIRED, 'Timeout per page, in seconds', '30')
             ->addOption('screenshots', null, InputOption::VALUE_REQUIRED, 'Element screenshots per rule and page (0 = none)', '3')
+            ->addOption('baseline', 'b', InputOption::VALUE_REQUIRED, 'Baseline file (see "baseline" command): known findings do not fail the run')
             ->addOption('fail-on', null, InputOption::VALUE_REQUIRED, 'Lowest severity that fails the run: critical, serious, moderate, minor or never', 'minor')
             ->addOption('chrome-path', null, InputOption::VALUE_REQUIRED, 'Chromium/Chrome binary (default: $CHROME_PATH or "chromium")')
             ->setHelp(<<<'HELP'
@@ -75,6 +77,7 @@ final class AuditCommand extends Command
 
         try {
             $config = AuditConfig::fromInput($input);
+            $baseline = $config->baseline === null ? null : Baseline::fromFile($config->baseline);
             $source = $this->source($config, $userAgent = new UserAgent($config->contactUrl), $throttle = new Throttle($config->crawl->delaySeconds));
         } catch (InvalidArgumentException $e) {
             $io->getErrorStyle()->error($e->getMessage());
@@ -105,7 +108,7 @@ final class AuditCommand extends Command
                 $config->audit->language,
                 $config->audit->level,
                 $config->en301549,
-                null,
+                $baseline?->fingerprints(),
                 $config->failOn,
             );
             $files = Reports::writer($browser)->write($run, $options, $config->outputDirectory, $config->formats);
