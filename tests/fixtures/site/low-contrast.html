@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fixture – low contrast</title>
+  <style>
+    body { font: 16px/1.5 sans-serif; background: #fff; }
+    .faint { color: #b0b0b0; }          /* 2.1:1 on white */
+    .fine { color: #595959; }           /* 7:1 on white, passes */
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Contrast</h1>
+    <!-- EXPECTED: color-contrast (1.4.3) -->
+    <p class="faint" id="faint-text">This grey text is hard to read.</p>
+    <p class="fine">This text has enough contrast.</p>
+  </main>
+</body>
+</html>

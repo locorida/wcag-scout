@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fixture – form that submits itself</title>
+</head>
+<body>
+  <main>
+    <h1>Self-submitting form</h1>
+    <p>Scripts on this page try to send data. wcag-scout must block every one of these requests.</p>
+    <form id="f" action="/post-sink.php" method="post">
+      <label for="v">Value</label>
+      <input id="v" name="value" value="form-submit">
+    </form>
+  </main>
+  <script>
+    fetch('/post-sink.php', { method: 'POST', body: 'source=fetch' }).catch(() => {});
+    navigator.sendBeacon('/post-sink.php', 'source=beacon');
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', '/post-sink.php');
+    xhr.send('source=xhr');
+    setTimeout(() => document.getElementById('f').submit(), 100);
+  </script>
+</body>
+</html>

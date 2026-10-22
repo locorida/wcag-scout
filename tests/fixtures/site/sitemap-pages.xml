@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>/</loc></url>
+  <url><loc>/missing-alt.html</loc></url>
+  <url><loc>/low-contrast.html</loc></url>
+  <url><loc>/form.html</loc></url>
+  <url><loc>/no-lang.html</loc></url>
+  <url><loc>/private/secret.html</loc></url>
+  <url><loc>/does-not-exist.html</loc></url>
+</urlset>

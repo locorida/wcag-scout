@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fixture – images without text alternative</title>
+</head>
+<body>
+  <main>
+    <h1>Images</h1>
+    <!-- EXPECTED: image-alt (1.1.1), two elements -->
+    <img src="/img/logo.svg" width="120" height="40">
+    <p><img src="/img/logo.svg" width="60" height="20" id="second-image"></p>
+    <!-- Decorative image with empty alt: correct, no finding -->
+    <img src="/img/logo.svg" alt="" width="60" height="20">
+    <!-- EXPECTED: link-name (2.4.4, 4.1.2): the only content is an image without alt -->
+    <a href="/"><img src="/img/logo.svg" width="60" height="20"></a>
+  </main>
+</body>
+</html>

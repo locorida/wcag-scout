@@ -43,3 +43,6 @@ jobs:
 
       - name: Unit tests
         run: docker run --rm -v "$PWD:/app" -u "$(id -u):$(id -g)" wcag-scout:dev composer test
+
+      - name: Integration tests (Chromium + axe-core against tests/fixtures)
+        run: docker run --rm -v "$PWD:/app" -u "$(id -u):$(id -g)" wcag-scout:dev composer test:integration

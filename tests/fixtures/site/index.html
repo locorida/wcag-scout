@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fixture site – accessible start page</title>
+  <style>
+    body { font: 16px/1.5 sans-serif; color: #1a1a1a; background: #fff; margin: 0; }
+    header, main, footer { padding: 1rem 2rem; }
+    a { color: #0b5394; }
+  </style>
+</head>
+<body>
+  <header>
+    <nav aria-label="Fixture pages">
+      <ul>
+        <li><a href="/missing-alt.html">Image without text alternative</a></li>
+        <li><a href="/low-contrast.html">Low contrast</a></li>
+        <li><a href="/form.html">Form without labels</a></li>
+        <li><a href="/no-lang.html">Page without language</a></li>
+        <li><a href="/auto-submit.html">Form that submits itself</a></li>
+        <li><a href="/private/secret.html">Page disallowed by robots.txt</a></li>
+        <li><a href="/does-not-exist.html">Broken link</a></li>
+        <li><a href="https://example.com/">External site (never crawled)</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <h1>Accessible start page</h1>
+    <p>This page is the clean reference: the audit must report no findings here.</p>
+    <img src="/img/logo.svg" alt="Fixture logo" width="120" height="40">
+  </main>
+  <footer>
+    <p>Test fixture for wcag-scout. Not a real website.</p>
+  </footer>
+</body>
+</html>

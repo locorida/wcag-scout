@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fixture – form without labels</title>
+</head>
+<body>
+  <main>
+    <h1>Newsletter</h1>
+    <form action="/post-sink.php" method="post">
+      <!-- EXPECTED: label (4.1.2): no accessible name at all -->
+      <input type="email" name="email">
+      <!--
+        NOT DETECTED (documented limit of automated testing): a placeholder gives the field an
+        accessible name, so axe-core does not report it, although WCAG 3.3.2 considers a
+        placeholder alone an insufficient label. Only a manual check finds this.
+      -->
+      <input type="tel" name="phone" placeholder="Phone">
+      <!-- Correctly labelled field: no finding -->
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name">
+      <!-- EXPECTED: button-name (4.1.2): icon button without accessible name -->
+      <button type="submit"><svg width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6"/></svg></button>
+    </form>
+  </main>
+</body>
+</html>
