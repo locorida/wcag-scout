@@ -18,7 +18,8 @@ final class FixtureServer
 
     public readonly string $sinkLog;
 
-    public function __construct()
+    /** @param string|null $documentRoot another directory to serve (without the fixture router) */
+    public function __construct(?string $documentRoot = null)
     {
         $fixtures = \dirname(__DIR__) . '/fixtures';
         $port = self::freePort();
@@ -26,10 +27,10 @@ final class FixtureServer
         $this->sinkLog = sys_get_temp_dir() . '/wcag-scout-sink-' . $port . '.log';
         @unlink($this->sinkLog);
 
-        $this->process = new Process(
-            [PHP_BINARY, '-S', '127.0.0.1:' . $port, '-t', $fixtures . '/site', $fixtures . '/router.php'],
-            env: ['WCAG_SCOUT_SINK_LOG' => $this->sinkLog],
-        );
+        $command = $documentRoot === null
+            ? [PHP_BINARY, '-S', '127.0.0.1:' . $port, '-t', $fixtures . '/site', $fixtures . '/router.php']
+            : [PHP_BINARY, '-S', '127.0.0.1:' . $port, '-t', $documentRoot];
+        $this->process = new Process($command, env: ['WCAG_SCOUT_SINK_LOG' => $this->sinkLog]);
         $this->process->start();
 
         $deadline = microtime(true) + 5;

@@ -16,6 +16,7 @@ final readonly class AuditRun
      * @param list<PageResult> $pages
      * @param array<string, string> $engines engine name => version, e.g. ["axe-core" => "4.14.0"]
      * @param array<string, scalar|list<string>|null> $options the effective options, for the record
+     * @param array<string, RuleInfo> $rules metadata of every rule with findings, by rule id
      */
     public function __construct(
         public string $toolVersion,
@@ -24,7 +25,19 @@ final readonly class AuditRun
         public array $engines,
         public array $options,
         public array $pages,
+        public array $rules = [],
     ) {}
+
+    public function rule(string $id): ?RuleInfo
+    {
+        return $this->rules[$id] ?? null;
+    }
+
+    /** The first audited URL's site, used as the report's subject. */
+    public function site(): ?string
+    {
+        return isset($this->pages[0]) ? $this->pages[0]->url->origin() : null;
+    }
 
     /** @return list<Finding> */
     public function findings(): array
@@ -55,7 +68,7 @@ final readonly class AuditRun
     /**
      * Findings grouped by rule, groups ordered by severity (worst first), then by size.
      *
-     * @return array<string, list<Finding>>
+     * @return array<string, non-empty-list<Finding>>
      */
     public function findingsByRule(): array
     {
@@ -77,6 +90,6 @@ final readonly class AuditRun
     /** @param list<PageResult> $pages */
     public function withPages(array $pages): self
     {
-        return new self($this->toolVersion, $this->startedAt, $this->finishedAt, $this->engines, $this->options, $pages);
+        return new self($this->toolVersion, $this->startedAt, $this->finishedAt, $this->engines, $this->options, $pages, $this->rules);
     }
 }

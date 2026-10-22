@@ -1,0 +1,166 @@
+{#- Human-readable report. Must itself pass the audit it describes (checked in CI). -#}
+{%- set disclaimer = disclaimer(m.options.language) -%}
+<!doctype html>
+<html lang="{{ m.options.language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="wcag-scout {{ m.run.toolVersion }}">
+  <title>{{ 'report.title'|t }} – {{ site }}</title>
+  <style>{% include 'report.css' %}</style>
+</head>
+<body>
+<a class="skip-link" href="#summary">{{ 'report.skip_link'|t }}</a>
+
+<header class="report-header">
+  <p class="eyebrow">wcag-scout</p>
+  <h1>{{ 'report.title'|t }}</h1>
+  <p class="subtitle">{{ 'report.subtitle'|t({'%site%': site}) }}</p>
+  <p class="meta">{{ 'report.generated'|t({'%date%': m.run.startedAt|date(m.options.language == 'de' ? 'd.m.Y, H:i T' : 'Y-m-d H:i T'), '%version%': m.run.toolVersion}) }}</p>
+  <p class="meta">{{ 'report.standard'|t({'%level%': m.options.level.value, '%en%': m.options.en301549.label}) }}</p>
+  {%- if m.options.en301549.value == '3.2.1' %}
+  <p class="meta note">{{ 'report.en_note_v321'|t }}</p>
+  {%- endif %}
+</header>
+
+<nav class="toc" aria-labelledby="toc-title">
+  <h2 id="toc-title">{{ 'report.toc'|t }}</h2>
+  <ol>
+    <li><a href="#limits">{{ disclaimer.title }}</a></li>
+    <li><a href="#summary">{{ 'summary.title'|t }}</a></li>
+    {%- if m.criteria is not empty %}<li><a href="#criteria">{{ 'criteria.title'|t }}</a></li>{% endif %}
+    {%- if m.bestPractices is not empty %}<li><a href="#best-practices">{{ 'best_practice.title'|t }}</a></li>{% endif %}
+    <li><a href="#pages">{{ 'pages.title'|t }}</a></li>
+    <li><a href="#manual">{{ 'manual.title'|t }}</a></li>
+  </ol>
+</nav>
+
+<main>
+  <section id="limits" class="disclaimer" aria-labelledby="limits-title">
+    <h2 id="limits-title">{{ disclaimer.title }}</h2>
+    <p>{{ disclaimer.text }}</p>
+    <p><a href="#manual">{{ disclaimer.manualChecksTitle }}</a></p>
+  </section>
+
+  <section id="summary" aria-labelledby="summary-title">
+    <h2 id="summary-title">{{ 'summary.title'|t }}</h2>
+    <ul class="figures">
+      <li><span class="figure-value">{{ m.auditedPageCount }}</span> <span class="figure-label">{{ 'summary.pages_audited'|t }}</span></li>
+      <li><span class="figure-value">{{ m.findingCount }}</span> <span class="figure-label">{{ 'summary.findings'|t }}</span></li>
+      <li><span class="figure-value">{{ m.criteriaCount }}</span> <span class="figure-label">{{ 'summary.criteria'|t }}</span></li>
+      <li><span class="figure-value">{{ m.ruleCount }}</span> <span class="figure-label">{{ 'summary.rules'|t }}</span></li>
+      {%- if m.options.hasBaseline %}
+      <li><span class="figure-value">{{ m.newCount }}</span> <span class="figure-label">{{ 'summary.new_findings'|t }}</span></li>
+      {%- endif %}
+      {%- if m.notAudited is not empty %}
+      <li><span class="figure-value">{{ m.notAudited|length }}</span> <span class="figure-label">{{ 'summary.pages_not_audited'|t }}</span></li>
+      {%- endif %}
+    </ul>
+
+    {%- if m.findingCount == 0 %}
+    <p class="all-clear">{{ 'summary.no_findings'|t }}</p>
+    {%- else %}
+    <table>
+      <caption>{{ 'summary.by_severity'|t }}</caption>
+      <thead><tr><th scope="col">{{ 'severity.label'|t }}</th><th scope="col" class="num">{{ 'summary.findings'|t }}</th><th scope="col">{{ 'severity.meaning'|t }}</th></tr></thead>
+      <tbody>
+      {%- for severity, count in m.run.countBySeverity %}
+        <tr><th scope="row"><span class="badge badge-{{ severity }}">{{ ('severity.' ~ severity)|t }}</span></th><td class="num">{{ count }}</td><td>{{ ('severity.' ~ severity ~ '.help')|t }}</td></tr>
+      {%- endfor %}
+      </tbody>
+    </table>
+
+    <table>
+      <caption>{{ 'summary.top_issues'|t }}</caption>
+      <thead><tr><th scope="col">{{ 'summary.issue'|t }}</th><th scope="col">{{ 'severity.label'|t }}</th><th scope="col" class="num">{{ 'summary.occurrences'|t }}</th><th scope="col" class="num">{{ 'summary.pages'|t }}</th></tr></thead>
+      <tbody>
+      {%- for issue in m.topIssues %}
+        <tr><th scope="row"><a href="#rule-{{ issue.rule }}">{{ issue.title }}</a></th><td><span class="badge badge-{{ issue.severity.value }}">{{ ('severity.' ~ issue.severity.value)|t }}</span></td><td class="num">{{ issue.count }}</td><td class="num">{{ issue.pages }}</td></tr>
+      {%- endfor %}
+      </tbody>
+    </table>
+    {%- endif %}
+  </section>
+
+  {%- if m.criteria is not empty %}
+  <section id="criteria" aria-labelledby="criteria-title">
+    <h2 id="criteria-title">{{ 'criteria.title'|t }}</h2>
+    {%- for group in m.criteria %}
+    {%- set sc = group.criterion %}
+    {%- set clause = sc.en301549Clause(m.options.en301549) %}
+    <section class="criterion" id="sc-{{ sc.number|replace({'.': '-'}) }}" aria-labelledby="sc-{{ sc.number|replace({'.': '-'}) }}-title">
+      <h3 id="sc-{{ sc.number|replace({'.': '-'}) }}-title">{{ sc.number }} {{ sc.translationKey|t }}</h3>
+      <p class="criterion-meta">
+        {{ 'criteria.level'|t({'%level%': sc.level.value}) }} ·
+        {% if clause %}{{ 'criteria.en_clause'|t({'%clause%': clause}) }}{% else %}{{ 'criteria.en_none'|t({'%en%': m.options.en301549.label}) }}{% endif %} ·
+        {{ group.count }} {{ 'summary.findings'|t }}
+      </p>
+      {%- for rule in group.rules %}{% include 'rule.html.twig' with {heading: 'h4'} %}{% endfor %}
+    </section>
+    {%- endfor %}
+  </section>
+  {%- endif %}
+
+  {%- if m.bestPractices is not empty %}
+  <section id="best-practices" aria-labelledby="best-practices-title">
+    <h2 id="best-practices-title">{{ 'best_practice.title'|t }}</h2>
+    <p>{{ 'best_practice.intro'|t }}</p>
+    {%- for rule in m.bestPractices %}{% include 'rule.html.twig' with {heading: 'h3'} %}{% endfor %}
+  </section>
+  {%- endif %}
+
+  <section id="pages" aria-labelledby="pages-title">
+    <h2 id="pages-title">{{ 'pages.title'|t }}</h2>
+    {%- if m.pages is not empty %}
+    <div class="table-scroll" tabindex="0" role="region" aria-labelledby="pages-caption">
+    <table>
+      <caption id="pages-caption">{{ 'pages.table_caption'|t }}</caption>
+      <thead><tr>
+        <th scope="col">{{ 'pages.page'|t }}</th>
+        {%- for severity in ['critical', 'serious', 'moderate', 'minor'] %}<th scope="col" class="num">{{ ('severity.' ~ severity)|t }}</th>{% endfor %}
+        <th scope="col" class="num">{{ 'pages.total'|t }}</th>
+      </tr></thead>
+      <tbody>
+      {%- for row in m.pages %}
+        <tr>
+          <th scope="row"><span class="page-title">{{ row.page.title ?? ('pages.untitled'|t) }}</span><br><a href="{{ row.page.url }}" class="url">{{ row.page.url }}</a></th>
+          {%- for severity, count in row.counts %}<td class="num">{{ count }}</td>{% endfor %}
+          <td class="num"><strong>{{ row.total }}</strong></td>
+        </tr>
+      {%- endfor %}
+      </tbody>
+    </table>
+    </div>
+    {%- endif %}
+
+    {%- if m.notAudited is not empty %}
+    <h3>{{ 'pages.not_audited'|t }}</h3>
+    <table>
+      <caption class="visually-hidden">{{ 'pages.not_audited'|t }}</caption>
+      <thead><tr><th scope="col">{{ 'pages.page'|t }}</th><th scope="col">{{ 'pages.reason'|t }}</th></tr></thead>
+      <tbody>
+      {%- for page in m.notAudited %}
+        <tr><th scope="row" class="url">{{ page.url }}</th><td>{% if page.status.value == 'failed' %}{{ 'reason.failed'|t({'%reason%': page.reason}) }}{% else %}{{ ('reason.' ~ page.reason)|t }}{% endif %}</td></tr>
+      {%- endfor %}
+      </tbody>
+    </table>
+    {%- endif %}
+  </section>
+
+  <section id="manual" aria-labelledby="manual-title">
+    <h2 id="manual-title">{{ disclaimer.manualChecksTitle }}</h2>
+    <p>{{ disclaimer.text }}</p>
+    <ul class="checklist">
+      {%- for check in disclaimer.manualChecks %}<li>{{ check }}</li>{% endfor %}
+    </ul>
+  </section>
+</main>
+
+<footer class="report-footer">
+  {%- for engine, version in m.run.engines %}
+  <p>{{ 'footer.engine'|t({'%engine%': engine, '%version%': version}) }}</p>
+  {%- endfor %}
+  <p>{{ 'footer.tool'|t }}</p>
+</footer>
+</body>
+</html>

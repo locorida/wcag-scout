@@ -4,6 +4,7 @@
 /coverage/
 /report/
 /reports/
+/wcag-scout-report/
 /build/
 .idea/
 .vscode/

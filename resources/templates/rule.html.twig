@@ -1,0 +1,53 @@
+{#- One rule with its explanation and all occurrences. Expects: rule, heading (h3|h4), m, pdf. -#}
+{%- set sub = heading == 'h3' ? 'h4' : 'h5' -%}
+<article class="rule" id="rule-{{ rule.id }}" aria-labelledby="rule-{{ rule.id }}-title">
+  <{{ heading }} id="rule-{{ rule.id }}-title" class="rule-title">
+    {{ rule.title }} <span class="badge badge-{{ rule.severity.value }}">{{ ('severity.' ~ rule.severity.value)|t }}</span>
+  </{{ heading }}>
+  <p class="rule-meta">
+    <code>{{ rule.id }}</code> · {{ 'finding.occurrences'|t({'%count%': rule.count, '%pages%': rule.pageCount}) }}
+    {%- if rule.otherCriteria is not empty %} · {{ 'criteria.also'|t({'%criteria%': rule.otherCriteria|map(c => c.number ~ ' ' ~ (c.translationKey|t))|join(', ')}) }}{% endif %}
+  </p>
+
+  {%- if rule.explanation %}
+  <dl class="explanation">
+    <dt>{{ 'finding.why'|t }}</dt><dd>{{ rule.explanation.why }}</dd>
+    <dt>{{ 'finding.who'|t }}</dt><dd>{{ rule.explanation.who }}</dd>
+    <dt>{{ 'finding.fix'|t }}</dt><dd>{{ rule.explanation.fix }}</dd>
+    {%- if rule.explanation.example %}
+    <dt>{{ 'finding.example'|t }}</dt><dd><pre><code>{{ rule.explanation.example }}</code></pre></dd>
+    {%- endif %}
+  </dl>
+  {%- elseif rule.description %}
+  <p>{{ rule.description }}</p>
+  {%- endif %}
+  <p><a href="{{ rule.helpUrl }}" lang="en">{{ 'finding.more_info'|t }}<span class="visually-hidden">: {{ rule.id }}</span></a></p>
+
+  {%- for pageUrl, findings in rule.byPage %}
+  <details{% if pdf or loop.first %} open{% endif %}>
+    <summary>{{ 'finding.page'|t }}: <span class="url">{{ pageUrl }}</span> ({{ findings|length }})</summary>
+    <ol class="occurrences">
+      {%- for finding in findings %}
+      <li class="occurrence">
+        <{{ sub }} class="occurrence-title">
+          {{ 'finding.element'|t }} {{ loop.index }}
+          {%- if m.isNew(finding) %} <span class="badge badge-new">{{ 'finding.new'|t }}</span>{% endif %}
+        </{{ sub }}>
+        <dl class="element">
+          <dt>{{ 'finding.selector'|t }}</dt><dd><code>{{ finding.selector }}</code></dd>
+          <dt>{{ 'finding.html'|t }}</dt><dd><pre><code>{{ finding.html }}</code></pre></dd>
+          {%- if finding.summary %}
+          <dt>{{ 'finding.details'|t }}</dt><dd><pre class="summary">{{ finding.summary }}</pre></dd>
+          {%- endif %}
+        </dl>
+        {%- if finding.screenshot %}
+        <figure>
+          <img src="{{ finding.screenshot }}" alt="{{ 'finding.screenshot_alt'|t({'%selector%': finding.selector}) }}" loading="lazy">
+        </figure>
+        {%- endif %}
+      </li>
+      {%- endfor %}
+    </ol>
+  </details>
+  {%- endfor %}
+</article>

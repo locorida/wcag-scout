@@ -14,5 +14,8 @@ final class Application extends ConsoleApplication
     public function __construct()
     {
         parent::__construct(self::NAME, self::VERSION);
+        $this->addCommands([
+            new AuditCommand(),
+        ]);
     }
 }

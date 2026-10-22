@@ -50,18 +50,24 @@ final readonly class Crawler
         return $state->results;
     }
 
+    private function skip(CrawlState $state, PageResult $result): void
+    {
+        $state->record($result, loaded: false);
+        $this->observer?->pageFinished($result);
+    }
+
     private function visit(Url $url, int $depth, CrawlState $state): void
     {
         if (!$state->markSeen($url)) {
             return;
         }
         if (!$state->inScope($url)) {
-            $state->record(PageResult::skipped($url, PageResult::SKIPPED_OUT_OF_SCOPE), loaded: false);
+            $this->skip($state, PageResult::skipped($url, PageResult::SKIPPED_OUT_OF_SCOPE));
 
             return;
         }
         if (!$this->robots->isAllowed($url)) {
-            $state->record(PageResult::skipped($url, PageResult::SKIPPED_ROBOTS_TXT), loaded: false);
+            $this->skip($state, PageResult::skipped($url, PageResult::SKIPPED_ROBOTS_TXT));
 
             return;
         }

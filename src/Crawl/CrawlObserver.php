@@ -14,5 +14,6 @@ interface CrawlObserver
 {
     public function pageStarted(Url $url, int $number, int $limit): void;
 
+    /** Called for every recorded page; skipped pages get no pageStarted() before. */
     public function pageFinished(PageResult $result): void;
 }

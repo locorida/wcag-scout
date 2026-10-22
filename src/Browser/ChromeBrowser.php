@@ -8,13 +8,15 @@ use Exception;
 use HeadlessChromium\Browser;
 use HeadlessChromium\BrowserFactory;
 use HeadlessChromium\Communication\Message;
+use HeadlessChromium\Page;
 use WcagScout\Crawl\UserAgent;
 use WcagScout\Model\Url;
+use WcagScout\Report\Pdf\PdfPrinter;
 
 /**
  * One headless Chromium for the whole run; every URL gets a fresh tab.
  */
-final class ChromeBrowser implements PageLoader
+final class ChromeBrowser implements PageLoader, PdfPrinter
 {
     private ?Browser $browser = null;
     private ?string $userAgent = null;
@@ -40,6 +42,54 @@ final class ChromeBrowser implements PageLoader
         }
 
         return ChromePage::load($page, $url, $this->userAgent ?? '', $this->guard, $this->options);
+    }
+
+    /**
+     * Prints a local HTML file to PDF. Uses Page.printToPDF directly, because chrome-php does
+     * not pass on generateTaggedPDF: the tag tree is what makes the PDF readable for screen
+     * readers, and the outline turns headings into bookmarks.
+     *
+     * @throws BrowserException
+     */
+    public function printPdf(string $htmlFile, string $pdfFile): void
+    {
+        try {
+            $page = $this->browser()->createPage();
+        } catch (Exception $e) {
+            throw new BrowserException('Could not start Chromium: ' . $e->getMessage(), 0, $e);
+        }
+
+        try {
+            $page->navigate('file://' . realpath($htmlFile))->waitForNavigation(Page::LOAD, $this->options->timeoutMs);
+            $response = $page->getSession()->sendMessageSync(new Message('Page.printToPDF', [
+                'printBackground' => true,
+                'preferCSSPageSize' => true,
+                'generateTaggedPDF' => true,
+                'generateDocumentOutline' => true,
+                'displayHeaderFooter' => true,
+                'headerTemplate' => '<span></span>',
+                'footerTemplate' => '<div style="width:100%;font:8px sans-serif;text-align:center;color:#444">'
+                    . '<span class="pageNumber"></span> / <span class="totalPages"></span></div>',
+            ]), 120_000);
+            if (!$response->isSuccessful()) {
+                throw new BrowserException('PDF export failed: ' . $response->getErrorMessage());
+            }
+            $data = $response->getResultData('data');
+            $pdf = \is_string($data) ? base64_decode($data, true) : false;
+            if ($pdf === false || file_put_contents($pdfFile, $pdf) === false) {
+                throw new BrowserException('Chromium returned no PDF data.');
+            }
+        } catch (BrowserException $e) {
+            throw $e;
+        } catch (Exception $e) {
+            throw new BrowserException('PDF export failed: ' . $e->getMessage(), 0, $e);
+        } finally {
+            try {
+                $page->close();
+            } catch (Exception) {
+                // Already closed.
+            }
+        }
     }
 
     public function version(): string
