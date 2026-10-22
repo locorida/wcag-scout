@@ -1,0 +1,9 @@
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.png binary
+
+# Third-party file, kept byte-identical to the published release (MPL-2.0).
+resources/axe/axe.min.js -diff linguist-vendored
+resources/axe/locales/*.json linguist-vendored
+
+/tests/fixtures/** linguist-documentation

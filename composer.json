@@ -1,0 +1,53 @@
+{
+    "name": "locorida/wcag-scout",
+    "description": "Polite accessibility crawler: audits public websites with axe-core in headless Chromium and writes WCAG 2.2 / EN 301 549 reports (HTML, PDF, JSON, JUnit).",
+    "type": "project",
+    "license": "MIT",
+    "keywords": ["accessibility", "a11y", "wcag", "en-301-549", "bfsg", "axe-core", "audit", "crawler", "cli"],
+    "authors": [
+        {"name": "Matthias Max", "homepage": "https://github.com/locorida"}
+    ],
+    "require": {
+        "php": ">=8.5",
+        "ext-dom": "*",
+        "ext-json": "*",
+        "ext-libxml": "*",
+        "ext-sockets": "*",
+        "ext-xmlreader": "*",
+        "ext-xmlwriter": "*",
+        "ext-zlib": "*",
+        "chrome-php/chrome": "^1.16",
+        "symfony/console": "^8.1",
+        "symfony/http-client": "^8.1",
+        "symfony/translation": "^8.1",
+        "twig/twig": "^3.30"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "phpstan/phpstan": "^2.3",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "phpunit/phpunit": "^13.4"
+    },
+    "autoload": {
+        "psr-4": {"WcagScout\\": "src/"}
+    },
+    "autoload-dev": {
+        "psr-4": {"WcagScout\\Tests\\": "tests/"}
+    },
+    "bin": ["bin/wcag-scout"],
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "platform-check": true
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:integration": "phpunit --testsuite integration",
+        "analyse": "phpstan analyse --memory-limit=1G",
+        "cs": "php-cs-fixer fix --dry-run --diff",
+        "cs:fix": "php-cs-fixer fix",
+        "check:licenses": "@php bin/check-licenses",
+        "ci": ["@cs", "@analyse", "@check:licenses", "@test"]
+    }
+}

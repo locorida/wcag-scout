@@ -1,0 +1,11 @@
+/vendor/
+/.phpunit.cache/
+/.php-cs-fixer.cache
+/coverage/
+/report/
+/reports/
+/build/
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store

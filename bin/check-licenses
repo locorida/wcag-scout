@@ -1,0 +1,36 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Fails when an installed runtime dependency uses a licence that is not on the allow list.
+ * Keeps THIRD_PARTY_NOTICES.md honest: a new licence has to be reviewed before it can ship.
+ */
+
+const ALLOWED = ['MIT', 'BSD-2-Clause', 'BSD-3-Clause', 'ISC', 'Apache-2.0'];
+
+exec('composer licenses --no-dev --format=json 2>/dev/null', $output, $exitCode);
+if ($exitCode !== 0) {
+    fwrite(STDERR, "composer licenses failed\n");
+    exit(3);
+}
+
+/** @var array{dependencies: array<string, array{version: string, license: list<string>}>} $data */
+$data = json_decode(implode("\n", $output), true, flags: JSON_THROW_ON_ERROR);
+
+$violations = [];
+foreach ($data['dependencies'] as $package => $info) {
+    // "MIT OR GPL" style dual licences are fine as long as one option is allowed.
+    if (array_intersect($info['license'], ALLOWED) === []) {
+        $licences = $info['license'] === [] ? 'none' : implode(', ', $info['license']);
+        $violations[] = sprintf('%s %s: %s', $package, $info['version'], $licences);
+    }
+}
+
+if ($violations !== []) {
+    fwrite(STDERR, "Licences not on the allow list:\n  " . implode("\n  ", $violations) . "\n");
+    exit(1);
+}
+
+printf("%d runtime dependencies, all licences allowed (%s).\n", count($data['dependencies']), implode(', ', ALLOWED));

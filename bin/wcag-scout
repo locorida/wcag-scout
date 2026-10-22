@@ -1,0 +1,15 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use WcagScout\Cli\Application;
+
+$autoload = dirname(__DIR__) . '/vendor/autoload.php';
+if (!is_file($autoload)) {
+    fwrite(STDERR, "Dependencies are missing. Run: composer install\n");
+    exit(3);
+}
+require $autoload;
+
+exit(new Application()->run());
