@@ -1,0 +1,69 @@
+name: Release
+
+# Publishes the Docker images for a version tag (v1.2.3):
+#   ghcr.io/locorida/wcag-scout:<version> and :latest   the tool (runs as an unprivileged user)
+#   ghcr.io/locorida/wcag-scout-action:<version>       the image action.yml refers to
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  images:
+    name: Build and publish images
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      # A tag must not publish an image that action.yml or the CLI do not know about.
+      - name: Check version consistency
+        run: |
+          v='${{ steps.version.outputs.version }}'
+          grep -q "ghcr.io/locorida/wcag-scout-action:${v}$" action.yml \
+            || { echo "action.yml does not point at wcag-scout-action:${v}"; exit 1; }
+          grep -q "VERSION = '${v}';" src/Cli/Application.php \
+            || { echo "Application::VERSION is not ${v}"; exit 1; }
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Runtime image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/locorida/wcag-scout:${{ steps.version.outputs.version }}
+            ghcr.io/locorida/wcag-scout:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/locorida/wcag-scout
+            org.opencontainers.image.description=Polite accessibility crawler with axe-core and WCAG 2.2 / EN 301 549 reports
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+          cache-from: type=gha,scope=runtime
+
+      - name: Action image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: action.Dockerfile
+          push: true
+          tags: ghcr.io/locorida/wcag-scout-action:${{ steps.version.outputs.version }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/locorida/wcag-scout
+            org.opencontainers.image.description=Image of the wcag-scout GitHub Action
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
