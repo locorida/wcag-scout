@@ -35,7 +35,7 @@ appears: MIT, BSD-2-Clause, BSD-3-Clause, ISC, Apache-2.0.
 | Package | Licence | Purpose |
 |---|---|---|
 | chrome-php/chrome (+ chrome-php/wrench) | MIT | Chrome DevTools Protocol client |
-| symfony/console, http-client, translation (+ their symfony/* and psr/* dependencies) | MIT | CLI, HTTP, i18n |
+| symfony/console, http-client, translation, clock (+ their symfony/* and psr/* dependencies) | MIT | CLI, HTTP, i18n, time |
 | twig/twig | BSD-3-Clause | HTML report templates |
 | monolog/monolog, psr/log (pulled in by chrome-php) | MIT | Logging interfaces |
 

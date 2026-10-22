@@ -8,6 +8,11 @@ use LogicException;
 
 final readonly class PageResult
 {
+    /** Reason codes for skipped pages; reports translate them. */
+    public const string SKIPPED_ROBOTS_TXT = 'robots-txt';
+    public const string SKIPPED_OUT_OF_SCOPE = 'out-of-scope';
+    public const string SKIPPED_NOT_HTML = 'not-html';
+
     /**
      * @param list<Finding> $findings
      * @param string|null $reason why the page was skipped or failed

@@ -17,6 +17,7 @@
         "ext-xmlwriter": "*",
         "ext-zlib": "*",
         "chrome-php/chrome": "^1.16",
+        "symfony/clock": "^8.1",
         "symfony/console": "^8.1",
         "symfony/http-client": "^8.1",
         "symfony/translation": "^8.1",
